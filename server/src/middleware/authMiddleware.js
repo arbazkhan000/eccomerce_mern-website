@@ -1,22 +1,29 @@
+import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
+import User from "../model/user.schema.js";
 
 const authMiddleware = async (req, res, next) => {
     try {
-        const token =
-            req.cookies.headers || req.headers.authorization.split(" ")[1];
+        const token = req.headers.authorization?.split(" ")[1];
 
         if (!token) {
-            return res.status(401).json({ message: "Unauthorized" });
+            return res
+                .status(StatusCodes.UNAUTHORIZED)
+                .json({ success: false, error: "Please token provided !" });
         }
 
-        jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
-            if (err) {
-                return res.status(403).json({ message: "Invalid token" });
-            }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("Decoed token", decoded);
 
-            req.user = user;
-            req.user = user.role;
-        });
+        const user = await User.findById(decoded.id);
+        console.log("User from token", user);
+        if (!user) {
+            return res
+                .status(StatusCodes.UNAUTHORIZED)
+                .json({ success: false, error: "User not found !" });
+        }
+
+        req.user = user;
 
         next();
     } catch (error) {
