@@ -30,6 +30,12 @@ const CartDrawer = () => {
         0
     );
 
+    //  const navigate = useNavigate();
+
+     const handleCheckout = () => {
+         navigate("/cart");
+     };
+
     return (
         <div className="relative">
             <Drawer>

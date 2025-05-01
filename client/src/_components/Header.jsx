@@ -1,7 +1,6 @@
-import { Menu, User } from "lucide-react";
+import { Menu, ShoppingCart, User } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import CartDrawer from "./CardDrawer";
+import { Link, useNavigate } from "react-router-dom";
 import LogOutToogle from "./admin/LogOutToogle";
 
 const Header = () => {
@@ -12,8 +11,9 @@ const Header = () => {
         { id: 4, label: "About", url: "#" },
     ];
 
-    const [isAuthenticate, setIsAuthenticate] = useState(true);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const token = localStorage.getItem("token");
+    const navigate = useNavigate();
 
     return (
         <header className="w-full border-b bg-white sticky top-0 z-50 shadow-md">
@@ -35,7 +35,7 @@ const Header = () => {
 
                 {/* Right Side */}
                 <div className="flex items-center space-x-4">
-                    {isAuthenticate ? (
+                    {token ? (
                         <LogOutToogle />
                     ) : (
                         <Link to="/login">
@@ -46,7 +46,11 @@ const Header = () => {
                             />
                         </Link>
                     )}
-                    <CartDrawer />
+
+                    {/* Cart */}
+                    <span onClick={() => navigate("/cart")}>
+                        <ShoppingCart size={28} />
+                    </span>
 
                     {/* Mobile Menu Icon */}
                     <button

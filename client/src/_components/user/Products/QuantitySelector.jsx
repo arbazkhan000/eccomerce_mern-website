@@ -1,18 +1,11 @@
-import { useState } from "react";
+// QuantitySelector.jsx
 import { Minus, Plus } from "lucide-react";
 
-const QuantitySelector = () => {
-    const [quantity, setQuantity] = useState(1);
-
-    const increase = () => setQuantity((prev) => prev + 1);
-    const decrease = () => {
-        if (quantity > 1) setQuantity((prev) => prev - 1);
-    };
-
+const QuantitySelector = ({ quantity, onIncrease, onDecrease }) => {
     return (
         <div className="flex items-center gap-4 w-fit border rounded-lg px-4 py-2 shadow-sm">
             <button
-                onClick={decrease}
+                onClick={onDecrease}
                 className="text-gray-600 hover:text-red-500 transition"
                 aria-label="Decrease quantity"
             >
@@ -24,7 +17,7 @@ const QuantitySelector = () => {
             </span>
 
             <button
-                onClick={increase}
+                onClick={onIncrease}
                 className="text-gray-600 hover:text-green-500 transition"
                 aria-label="Increase quantity"
             >

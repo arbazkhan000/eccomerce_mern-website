@@ -1,115 +1,89 @@
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useCart } from "@/Context/CartContext";
+import LoaderSpinner from "@/pages/LoaderSpinner";
+import { axiosInstance } from "@/utils/axiosInstance";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import QuantitySelector from "./QuantitySelector";
 
 const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [product, setProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [quantity, setQuantity] = useState(1);
+    const { addToCart } = useCart();
 
-    const [products] = useState([
-        {
-            id: 1,
-            img: "https://example.com/image1-1.jpg",
-            images: [
-                "https://example.com/image1-1.jpg",
-                "https://example.com/image1-2.jpg",
-                "https://example.com/image1-3.jpg",
-            ],
-            title: "Product 1",
-            Category: "Category 1",
-            price: 49.99,
-        },
-        {
-            id: 2,
-            img: "https://example.com/image2-1.jpg",
-            images: [
-                "https://example.com/image2-1.jpg",
-                "https://example.com/image2-2.jpg",
-            ],
-            title: "Product 2",
-            Category: "Category 2",
-            price: 89.99,
-        },
-        {
-            id: 3,
-            img: "https://example.com/image3-1.jpg",
-            images: [
-                "https://example.com/image3-1.jpg",
-                "https://example.com/image3-2.jpg",
-                "https://example.com/image3-3.jpg",
-                "https://example.com/image3-4.jpg",
-            ],
-            title: "Product 3",
-            Category: "Category 3",
-            price: 129.99,
-        },
-        {
-            id: 4,
-            img: "https://example.com/image4-1.jpg",
-            images: [
-                "https://example.com/image4-1.jpg",
-                "https://example.com/image4-2.jpg",
-            ],
-            title: "Product 4",
-            Category: "Category 4",
-            price: 199.99,
-        },
-        {
-            id: 5,
-            img: "https://example.com/image5-1.jpg",
-            images: [
-                "https://example.com/image5-1.jpg",
-                "https://example.com/image5-2.jpg",
-                "https://example.com/image5-3.jpg",
-            ],
-            title: "Product 5",
-            Category: "Category 4",
-            price: 149.99,
-        },
-        {
-            id: 6,
-            img: "https://example.com/image6-1.jpg",
-            images: [
-                "https://example.com/image6-1.jpg",
-                "https://example.com/image6-2.jpg",
-                "https://example.com/image6-3.jpg",
-            ],
-            title: "Product 6",
-            Category: "Category 2",
-            price: 119.99,
-        },
-        {
-            id: 7,
-            img: "https://example.com/image7-1.jpg",
-            images: [
-                "https://example.com/image7-1.jpg",
-                "https://example.com/image7-2.jpg",
-            ],
-            title: "Product 7",
-            Category: "Category 3",
-            price: 179.99,
-        },
-        {
-            id: 8,
-            img: "https://img.freepik.com/free-vector/vintage-beautiful-watches-design-concept_1284-38365.jpg?ga=GA1.1.395377891.1745469847&semt=ais_hybrid&w=740",
-            images: [
-                "https://img.freepik.com/free-photo/close-up-clock-with-time-change_23-2149241142.jpg?ga=GA1.1.395377891.1745469847&semt=ais_hybrid&w=740",
-                "https://img.freepik.com/free-vector/classic-watches-interface_250435-186.jpg?ga=GA1.1.395377891.1745469847&semt=ais_hybrid&w=740",
-                "https://img.freepik.com/free-vector/classic-watches-interface_250435-186.jpg?ga=GA1.1.395377891.1745469847&semt=ais_hybrid&w=740",
-            ],
-            title: "Product 8",
-            Category: "Category 1",
-            price: 209.99,
-        },
-    ]);
+    const fetchProduct = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const { data } = await axiosInstance.get(`/users/products/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            });
+            setProduct(data.data);
+        } catch (error) {
+            setError(
+                error.response?.data?.message || "Failed to fetch product"
+            );
+            console.error("Error fetching product:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const product = products.find((product) => product.id === parseInt(id));
-    console.log(product);
+    useEffect(() => {
+        if (id) {
+            fetchProduct();
+        }
+    }, [id]);
 
-    if (product?.length === 0) {
-        return <div className="text-center mt-10 text-xl">Loading...</div>;
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-[60vh]">
+                <LoaderSpinner />
+            </div>
+        );
     }
+
+    if (error) {
+        return (
+            <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
+                <h1 className="text-2xl font-bold text-red-500">{error}</h1>
+                <button
+                    onClick={fetchProduct}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
+
+    if (!product) {
+        return (
+            <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
+                <h1 className="text-2xl font-bold">Product not found</h1>
+                <Button onClick={() => navigate("/products")}>
+                    Back to Products
+                </Button>
+            </div>
+        );
+    }
+
+    const normalizeImagePath = (path) => {
+        if (!path) return "/placeholder-product.jpg";
+        const fixedPath = path.replace(/\\/g, "/");
+        return `http://localhost:1000/${fixedPath}`;
+    };
+
+    const mainImage =
+        product.images?.[currentImageIndex] ||
+        product.images?.[0] ||
+        "/placeholder-product.jpg";
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-10">
@@ -123,52 +97,85 @@ const ProductDetail = () => {
             <div className="flex flex-col lg:flex-row gap-10">
                 {/* Image Section */}
                 <div className="flex-1">
-                    <img
-                        src={product?.img}
-                        alt={product?.title}
-                        className="w-full h-auto rounded-lg shadow-lg object-cover"
-                    />
-
-                    <div className="grid grid-cols-4 gap-2 mt-4">
+                    <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
                         <img
-                            src={product?.images[0]}
-                            alt={product?.title}
-                            className="w-full h-20 object-cover rounded-md"
-                        />
-                        <img
-                            src={product?.images[1]}
-                            alt={product?.title}
-                            className="w-full h-20 object-cover rounded-md"
-                        />
-                        <img
-                            src={product?.images[2]}
-                            alt={product?.title}
-                            className="w-full h-20 object-cover rounded-md"
+                            src={normalizeImagePath(mainImage)}
+                            alt={product.title}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                                e.target.src = "/placeholder-product.jpg";
+                            }}
                         />
                     </div>
+
+                    {product.images?.length > 1 && (
+                        <div className="grid grid-cols-4 gap-2 mt-4">
+                            {product.images.map((img, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setCurrentImageIndex(index)}
+                                    className={`w-full h-20 overflow-hidden rounded-md border-2 ${
+                                        currentImageIndex === index
+                                            ? "border-blue-500"
+                                            : "border-transparent"
+                                    }`}
+                                >
+                                    <img
+                                        src={normalizeImagePath(img)}
+                                        alt={`${product.title} thumbnail ${
+                                            index + 1
+                                        }`}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.src =
+                                                "/placeholder-product.jpg";
+                                        }}
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Product Details */}
                 <div className="flex-1 space-y-6">
                     <h2 className="text-2xl md:text-3xl font-semibold">
-                        {product?.title}
+                        {product.title}
                     </h2>
                     <p className="text-xl text-green-600 font-bold">
-                        ${product?.price.toFixed(2)}
+                        ${product.price?.toFixed(2) || "0.00"}
                     </p>
 
                     <div>
                         <label className="block text-gray-600 font-medium mb-1">
                             Description
                         </label>
-                        <p className="text-gray-700">
-                            Category: {product?.Category}
+                        <p className="text-gray-700">{product.description}</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-600 font-medium mb-1">
+                            Category
+                        </label>
+                        <p className="text-gray-700 capitalize">
+                            {product.category}
                         </p>
                     </div>
 
-                    <QuantitySelector />
-
-                    <Button className="mt-4 w-full md:w-auto">
+                    <Button
+                        onClick={() => {
+                            addToCart({
+                                id: product._id,
+                                title: product.title,
+                                price: product.price,
+                                quantity,
+                                image: product.images?.[0],
+                            });
+                            navigate("/cart");
+                            console.log("quantity", quantity);
+                        }}
+                        className="mt-4 w-full md:w-auto"
+                    >
                         Add to Cart
                     </Button>
                 </div>

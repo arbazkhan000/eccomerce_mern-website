@@ -7,7 +7,7 @@ import BagImage from "../../assets/feature product bag.avif";
 import HeadphoneImage from "../../assets/feature product headphone.avif";
 import WatchImage from "../../assets/feature product image1.avif";
 import LampImage from "../../assets/feature product lamp.avif";
-import ProductCard from "../user/ProductCard";
+import ProductCard from "../user/Products/ProductCard";
 
 const heroVariants = {
     hidden: { opacity: 0 },
