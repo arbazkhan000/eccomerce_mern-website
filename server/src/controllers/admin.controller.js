@@ -1,113 +1,178 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import Admin from "../model/admin.schema.js";
+import { StatusCodes } from "http-status-codes";
+import Product from "../model/product.schema.js";
+import fs from 'fs';
+import path from 'path';
 
 class AdminController {
-    // admin Register
-    static async adminRegister(req, res) {
-        const { username, password } = req.body;
+    // @desc   Admin create a new product
+    static async createProduct(req, res) {
+        const { title, price, description, category, stock } = req.body;
 
         try {
-            if (!username || !password) {
-                return res.status(400).json({
+            // Validate required fields
+            if (!title || !price || !description || !category) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    message: "Please enter all fields",
+                    message: "All fields are required!",
                 });
             }
 
-            let adminCheck = await Admin.findOne({ username });
-
-            if (!adminCheck) {
-                return res.status(400).json({
+            // Validate image files
+            if (!req.files || req.files.length === 0) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    message: "Please add different username and password",
+                    message: "At least one image is required!",
                 });
             }
 
-            const hashPassword = await bcrypt.hash(password, 10);
+            console.log("Req.files",req.files)
 
-            const admindata = {
-                username: username,
-                password: hashPassword,
-            };
+            // Convert file objects to file paths
+            const imagePaths = req.files.map((file) => file.path);
+            console.log("Image path",imagePaths)
 
-            const admin = await Admin.create({ admindata });
+            // Create and save product
+            const newProduct = new Product({
+                title,
+                images: imagePaths,
+                price,
+                description,
+                category,
+                stock: stock || 0,
+            });
 
-            // Success response
+            await newProduct.save();
 
-            return res.status(201).json({
+            return res.status(StatusCodes.CREATED).json({
                 success: true,
-                message: "Admin created successfully",
-                data: admin,
+                message: "Product created successfully",
+                data: newProduct,
             });
         } catch (error) {
-            return res.status(500).json({
+            console.error("Error in createProduct:", error.message);
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 message: error.message,
             });
         }
     }
 
-    // Admin Login
-
-    static async adminLogin(req, res) {
-        const { username, password } = req.body;
+    // @desc   Admin update product
+    static async updateProduct(req, res) {
+        const { id } = req.params;
+        const { title, price, description, category, stock } = req.body;
 
         try {
-            if (!username || !password) {
-                return res.status(400).json({
+            // Find the product first
+            const product = await Product.findById(id);
+
+            if (!product) {
+                return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    message: "Please enter all fields",
+                    message: "Product not found!",
                 });
             }
 
-            let admin = await Admin.find({
-                username: username,
-                password: password,
-            });
+            // Create update object with basic fields
+            const updateData = {
+                title: title || product.title,
+                price: price || product.price,
+                description: description || product.description,
+                category: category || product.category,
+                stock: stock !== undefined ? stock : product.stock,
+            };
 
-            if (!admin) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Admin user not found",
-                });
+            // Handle image updates if files are uploaded
+            if (req.files && req.files.length > 0) {
+                const imagePaths = req.files.map((file) => file.path);
+                updateData.images = imagePaths;
             }
 
-            const isMatchPassword = await bcrypt.compare(
-                password,
-                admin.password
+            // Update the product
+            const updatedProduct = await Product.findByIdAndUpdate(
+                id,
+                updateData,
+                { new: true }
             );
 
-            if (!isMatchPassword) {
-                return res.status(400).json({
+            if (!updatedProduct) {
+                return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    message: "Invalid Creadinals",
+                    message: "Product not found!",
                 });
             }
 
-            // token
-
-            const token = jwt.sign(
-                {
-                    id: admin._id,
-                    role: admin.role,
-                },
-                process.env.JWT_SECRET_KEY,
-                {
-                    expiresIn: "1d",
-                }
-            );
-
-            // Response Success
-
-            return res.status(200).json({
+            return res.status(StatusCodes.OK).json({
                 success: true,
-                message: "Admin Login Success",
-                data: admin,
-                token: token,
+                message: "Product updated successfully",
+                data: updatedProduct,
             });
         } catch (error) {
-            return res.status(500).json({
+            console.error("Error in updateProduct:", error.message);
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: error.message,
+            });
+        }
+    }
+
+    // @desc   Admin delete product
+    static async deleteProduct(req, res) {
+        const { id } = req.params;
+
+        try {
+            const product = await Product.findById(id);
+
+            if (!product) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    message: "Product not found!",
+                });
+            }
+
+            // Delete each image from file system
+            if (product.images?.length) {
+                product.images.forEach((imagePath) => {
+                    const fullPath = path.resolve(imagePath);
+                    fs.unlink(fullPath, (err) => {
+                        if (err) {
+                            console.error(
+                                `Failed to delete image: ${imagePath}`,
+                                err.message
+                            );
+                        }
+                    });
+                });
+            }
+
+            // Delete the product from the database
+            await Product.findByIdAndDelete(id);
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                message: "Product deleted successfully",
+            });
+        } catch (error) {
+            console.error("Error in deleteProduct:", error.message);
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: error.message,
+            });
+        }
+    }
+
+    // @desc   Admin get all products
+    static async getAllProducts(req, res) {
+        try {
+            const products = await Product.find();
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                message: "All products fetched successfully",
+                data: products,
+            });
+        } catch (error) {
+            console.error("Error in getAllProducts:", error.message);
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 message: error.message,
             });

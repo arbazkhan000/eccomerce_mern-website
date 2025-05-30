@@ -36,20 +36,30 @@ const LoginPage = () => {
 
         try {
             const { data } = await axiosInstance.post("/users/login", formdata);
+            console.log("Login response data:", data);
             const { token, data: user } = data;
+            console.log("User data:", user);
 
+            // Check if user data is present
             if (user) {
                 localStorage.setItem("user", JSON.stringify(user));
                 localStorage.setItem("token", token);
+
+                // ✅ Fixed: Check user.role instead of user.isAdmin
+                const isAdmin = user.role === "admin";
+                localStorage.setItem("admin", isAdmin ? "true" : "false");
 
                 toast({
                     title: "Login Successful",
                     description: "You have successfully logged in.",
                 });
 
-                // window.location.href = "/products";
-
-                navigate("/products");
+                // Redirect based on role
+                if (isAdmin) {
+                    navigate("/admin");
+                } else {
+                    navigate("/products");
+                }
             }
         } catch (err) {
             setError(

@@ -1,3 +1,4 @@
+import { useCart } from "@/Context/CartContext";
 import { Menu, ShoppingCart, User } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -5,15 +6,16 @@ import LogOutToogle from "./admin/LogOutToogle";
 
 const Header = () => {
     const menubar = [
-        { id: 1, label: "Home", url: "#" },
+        { id: 1, label: "Home", url: "/" },
         { id: 2, label: "Products", url: "/products" },
-        { id: 3, label: "Categories", url: "#" },
-        { id: 4, label: "About", url: "#" },
+        { id: 3, label: "About", url: "/about" },
     ];
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const token = localStorage.getItem("token");
     const navigate = useNavigate();
+
+    const {cartItems} = useCart();
 
     return (
         <header className="w-full border-b bg-white sticky top-0 z-50 shadow-md">
@@ -28,7 +30,7 @@ const Header = () => {
                             key={item.id}
                             className="font-medium text-[18px] hover:text-blue-500 transition"
                         >
-                            <a href={item.url}>{item.label}</a>
+                            <Link to={item.url}>{item.label}</Link>
                         </li>
                     ))}
                 </ul>
@@ -48,8 +50,19 @@ const Header = () => {
                     )}
 
                     {/* Cart */}
-                    <span onClick={() => navigate("/cart")}>
+                    <span
+                        onClick={() => navigate("/cart")}
+                        className="relative cursor-pointer"
+                    >
                         <ShoppingCart size={28} />
+                        {cartItems.length > 0 && (
+                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                {cartItems.reduce(
+                                    (total, item) => total + item.quantity,
+                                    0
+                                )}
+                            </span>
+                        )}
                     </span>
 
                     {/* Mobile Menu Icon */}

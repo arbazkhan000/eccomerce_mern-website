@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
+import LoaderSpinner from "@/pages/LoaderSpinner";
+import { axiosInstance } from "@/utils/axiosInstance";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BannerImage from "../../assets/Banner_image.jpg";
-import BagImage from "../../assets/feature product bag.avif";
 import HeadphoneImage from "../../assets/feature product headphone.avif";
 import WatchImage from "../../assets/feature product image1.avif";
 import LampImage from "../../assets/feature product lamp.avif";
@@ -33,36 +34,39 @@ const itemVariants = {
 };
 
 const IndexPage = () => {
-    const [featuredProducts] = useState([
-        {
-            id: 1,
-            img: WatchImage,
-            title: "Minimalist Watch",
-            Category: "Accessories",
-            price: 49.99,
-        },
-        {
-            id: 2,
-            img: LampImage,
-            title: "Modern Desk Lamp",
-            Category: "Home",
-            price: 89.99,
-        },
-        {
-            id: 3,
-            img: BagImage,
-            title: "Canvas Backpack",
-            Category: "Accessories",
-            price: 129.99,
-        },
-        {
-            id: 4,
-            img: HeadphoneImage,
-            title: "Wireless Headphones",
-            Category: "Electronics",
-            price: 129.99,
-        },
-    ]);
+    //     {
+    //         id: 1,
+    //         img: WatchImage,
+    //         title: "Minimalist Watch",
+    //         Category: "Accessories",
+    //         price: 49.99,
+    //     },
+    //     {
+    //         id: 2,
+    //         img: LampImage,
+    //         title: "Modern Desk Lamp",
+    //         Category: "Home",
+    //         price: 89.99,
+    //     },
+    //     {
+    //         id: 3,
+    //         img: BagImage,
+    //         title: "Canvas Backpack",
+    //         Category: "Accessories",
+    //         price: 129.99,
+    //     },
+    //     {
+    //         id: 4,
+    //         img: HeadphoneImage,
+    //         title: "Wireless Headphones",
+    //         Category: "Electronics",
+    //         price: 129.99,
+    //     },
+    // ]);
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [products, setProducts] = useState([]);
 
     const [catageroyProducts] = useState([
         {
@@ -87,6 +91,43 @@ const IndexPage = () => {
 
     const navigate = useNavigate();
 
+    //api calling desc one product per unique category
+    const fetchProducts = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const { data } = await axiosInstance.get(
+                "/users/unique-category-products",
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                    },
+                }
+            );
+
+            console.log("unique category products", data);
+            setProducts(data);
+        } catch (error) {
+            console.error("Error fetching products:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <LoaderSpinner />
+            </div>
+        );
+    }
     return (
         <div className="flex flex-col items-center justify-center ">
             {/* Hero Section */}
@@ -144,16 +185,22 @@ const IndexPage = () => {
                     Our curated selection of trending items just for you
                 </motion.p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {featuredProducts.map((product, index) => (
-                        <ProductCard
-                            onClick={() => navigate("/products")}
-                            key={product.id}
-                            product={product}
-                            index={index}
-                        />
-                    ))}
-                </div>
+                {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {products.length > 0 ? (
+                        products.map((product, index) => (
+                            <ProductCard
+                                onClick={() => navigate("/products")}
+                                key={product.id || product._id}
+                                product={product}
+                                index={index}
+                            />
+                        ))
+                    ) : (
+                        <div className="col-span-full text-center text-gray-600 text-sm sm:text-base md:text-lg">
+                            No products available
+                        </div>
+                    )}
+                </div> */}
             </motion.section>
 
             {/* Shop by Category Section */}

@@ -1,25 +1,17 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-// import LoadingSpinner from "@/components/LoadingSpinner";
 
 const ProductCard = ({ product, index, onClick }) => {
-    const [imageError, setImageError] = useState(false);
     const [imageLoading, setImageLoading] = useState(true);
+    const [imageError, setImageError] = useState(false);
 
-    // Normalize image path by replacing backslashes with forward slashes
-    const normalizeImagePath = (path) => {
-        if (!path) return null;
-        return path.replace(/\\/g, "/");
-    };
+    // Get the first image if multiple exist
+    const productImage = product.images?.[0] || "";
 
-    // Get the first available image
-    const getProductImage = () => {
-        if (!product.images || product.images.length === 0) return null;
-        return normalizeImagePath(product.images[0]); // Use first image instead of [2]
-    };
-
-    const productImage = getProductImage();
+    // Construct the correct URL - replace backslashes with forward slashes
+    const imageUrl = productImage
+        ? `http://localhost:1000/${productImage.replace(/\\/g, "/")}`
+        : "https://via.placeholder.com/300"; // fallback image
 
     return (
         <motion.div
@@ -58,9 +50,9 @@ const ProductCard = ({ product, index, onClick }) => {
                     )}
                     <img
                         src={
-                            imageError || !productImage
-                                ? "/placeholder-product.jpg"
-                                : `http://localhost:1000/${productImage}`
+                            imageError
+                                ? "https://via.placeholder.com/300"
+                                : imageUrl
                         }
                         alt={product.title}
                         className={`h-full w-full object-cover object-center transition-transform group-hover:scale-105 ${

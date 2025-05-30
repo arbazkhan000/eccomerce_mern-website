@@ -11,9 +11,10 @@ import { useNavigate } from "react-router-dom";
 const LogOutToogle = () => {
     const navigate = useNavigate();
 
-    const handelLogout = () => {
+    const handleLogout = () => {
         localStorage.removeItem("user");
         localStorage.removeItem("token");
+        localStorage.removeItem("admin"); // Also remove admin status on logout
 
         navigate("/login");
 
@@ -22,17 +23,37 @@ const LogOutToogle = () => {
             description: "You have successfully logged out.",
         });
     };
+
+    // Function to get first and last letters of username
+    const getInitials = (fullname) => {
+        if (!fullname) return "U";
+
+        const words = fullname.trim().split(" ").filter(Boolean);
+
+        if (words.length === 1) {
+            return words[0][0].toUpperCase(); // Only first name exists
+        }
+
+        // Get first letter of first word and first letter of last word
+        return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+    };
+
     return (
         <div>
             <DropdownMenu>
                 <DropdownMenuTrigger>
                     <Avatar>
                         <AvatarImage />
-                        <AvatarFallback>CN</AvatarFallback>
+                        <AvatarFallback>
+                            {getInitials(
+                                JSON.parse(localStorage.getItem("user"))
+                                    ?.fullName
+                            )}
+                        </AvatarFallback>
                     </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                    <DropdownMenuItem onClick={handelLogout}>
+                    <DropdownMenuItem onClick={handleLogout}>
                         Logout
                     </DropdownMenuItem>
                     <DropdownMenuItem>Orders</DropdownMenuItem>

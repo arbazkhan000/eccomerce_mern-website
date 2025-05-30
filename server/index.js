@@ -3,13 +3,22 @@ import dotenv from "dotenv";
 import express from "express";
 import { StatusCodes } from "http-status-codes";
 import ConnectDb from "./src/db/Connect.js";
-import userRoutes from "./src/routes/user.routes.js";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
 const app = express();
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Base route
 app.get("/", (req, res) => {
@@ -17,7 +26,7 @@ app.get("/", (req, res) => {
 });
 
 // Universal routes
-app.use("/api/auth", userRoutes);
+
 
 
 // Error handling middleware
@@ -28,6 +37,15 @@ app.use((err, req, res, next) => {
         message: err.message || "Internal Server Error",
     });
 });
+
+
+
+import userRoutes from "./src/routes/user.routes.js";
+import adminRoutes from "./src/routes/admin.routes.js";
+
+app.use("/api/users", userRoutes);  
+app.use("/api/admin", adminRoutes); 
+
 
 // Start the server
 const ServerStart = async () => {

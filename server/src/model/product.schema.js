@@ -24,7 +24,14 @@ const productSchema = new mongoose.Schema(
         category: {
             type: String,
             required: true,
-            enum: ["All", "Accessories", "Clothes", "Fitness", "Other"],
+            enum: [
+                "All",
+                "Accessories",
+                "Clothes",
+                "Fitness",
+                "Other",
+                "Electronics",
+            ],
             default: "All",
         },
         stock: {

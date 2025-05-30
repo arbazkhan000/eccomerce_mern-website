@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+// import { input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
     Select,
@@ -87,7 +88,7 @@ const CreateProducts = () => {
                         >
                             Description
                         </Label>
-                        <Input
+                        <input
                             id="description"
                             placeholder="Enter product description"
                             value={productDesc}
@@ -102,7 +103,7 @@ const CreateProducts = () => {
                         >
                             Price
                         </Label>
-                        <Input
+                        <input
                             id="price"
                             type="number"
                             placeholder="0.00"
@@ -118,7 +119,7 @@ const CreateProducts = () => {
                         >
                             Stock Quantity
                         </Label>
-                        <Input
+                        <input
                             id="stock-quantity"
                             type="number"
                             placeholder="Enter stock quantity"
@@ -185,8 +186,8 @@ const CreateProducts = () => {
                             ))}
                         </div>
 
-                        {/* File Input */}
-                        <Input
+                        {/* File input */}
+                        <input
                             id="product-image"
                             type="file"
                             multiple
