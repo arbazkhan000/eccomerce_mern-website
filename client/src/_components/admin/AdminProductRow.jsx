@@ -9,7 +9,7 @@ const AdminProductRow = ({ product }) => {
 
     const safeProduct = {
         _id: product?._id || "",
-        name: product?.name || "Unnamed Product",
+        title: product?.title || "Unnamed Product",
         description: product?.description || "No description available",
         images: product?.images || [],
         category: product?.category || "Uncategorized",
@@ -27,7 +27,7 @@ const AdminProductRow = ({ product }) => {
 
     const handleDelete = async () => {
         const confirm = window.confirm(
-            `Are you sure you want to delete "${safeProduct.name}"?`
+            `Are you sure you want to delete "${safeProduct.title}"?`
         );
         if (!confirm) return;
 
@@ -41,7 +41,7 @@ const AdminProductRow = ({ product }) => {
 
             toast({
                 title: "Product Deleted",
-                description: `${safeProduct.name} has been successfully deleted.`,
+                description: `${safeProduct.title} has been successfully deleted.`,
             });
         } catch (error) {
             toast({
@@ -88,7 +88,7 @@ const AdminProductRow = ({ product }) => {
                                 safeProduct.images[0] ||
                                 "https://via.placeholder.com/40?text=No+Image"
                             }
-                            alt={safeProduct.name}
+                            alt={safeProduct.title}
                             onError={handleImageError}
                             className="w-10 h-10 rounded object-cover ring-1 ring-gray-200"
                         />
@@ -100,7 +100,7 @@ const AdminProductRow = ({ product }) => {
                     </div>
                     <div className="min-w-0 flex-1">
                         <div className="font-medium text-gray-900 truncate">
-                            {safeProduct.name}
+                            {safeProduct.title}
                         </div>
                         <div className="text-xs text-gray-500 line-clamp-2 sm:line-clamp-1">
                             {safeProduct.description}

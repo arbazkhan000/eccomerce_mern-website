@@ -20,13 +20,8 @@ const AdminDashboard = () => {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
             });
-            // Ensure the data is an array
-            const productsArray = Array.isArray(data.products)
-                ? data.products
-                : Array.isArray(data)
-                ? data
-                : [];
-
+            // Access products from the data field of the response
+            const productsArray = Array.isArray(data.data) ? data.data : [];
             setProducts(productsArray);
         } catch (err) {
             setError(err.response?.data?.message || "Failed to fetch products");
@@ -44,7 +39,7 @@ const AdminDashboard = () => {
     const filteredProducts = Array.isArray(products)
         ? products.filter(
               (product) =>
-                  product.name
+                  product.title
                       .toLowerCase()
                       .includes(searchQuery.toLowerCase()) ||
                   product.description
